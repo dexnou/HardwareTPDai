@@ -8,6 +8,7 @@ import React, {useState, useEffect} from 'react';
 import { Accelerometer } from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 export default function HomeScreen() {
   const [data, setData] = useState({ x: 0, y: 0, z: 0 });
   const [lastUpdate, setLastUpdate] = useState(Date.now());
