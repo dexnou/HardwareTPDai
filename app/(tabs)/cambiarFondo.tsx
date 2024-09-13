@@ -1,27 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Image, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
-import { Camera, CameraType } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BackgroundImageChanger: React.FC = () => {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-  const [cameraPermission, setCameraPermission] = useState<boolean>(false);
   const [showCamera, setShowCamera] = useState<boolean>(false);
-  const cameraRef = useRef<Camera>(null);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [facing, setFacing] = useState<CameraType>('back');
 
   useEffect(() => {
     const initialize = async () => {
       try {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        setCameraPermission(status === 'granted');
-
         const savedImage = await AsyncStorage.getItem('backgroundImage');
         if (savedImage) {
           setBackgroundImage(savedImage);
         }
       } catch (error) {
-        console.error('Error initializing permissions or fetching image:', error);
+        console.error('Error fetching saved image:', error);
       }
     };
 
@@ -29,24 +26,27 @@ const BackgroundImageChanger: React.FC = () => {
   }, []);
 
   const takePhoto = async () => {
-    if (cameraPermission) {
+    if (permission?.granted) {
       setShowCamera(true);
     } else {
-      Alert.alert('Permiso no concedido', 'No se ha otorgado permiso para usar la cámara.');
+      Alert.alert('Permiso no concedido', 'No se ha otorgado permiso para usar la cámara.', [
+        { text: 'Conceder Permiso', onPress: requestPermission },
+      ]);
     }
   };
+  
 
   const handleCameraCapture = async () => {
-    if (cameraRef.current) {
+    if (CameraView.current) {
       try {
-        const photo = await cameraRef.current.takePictureAsync();
+        const photo = await CameraView.current.takePictureAsync();
         setShowCamera(false);
         if (photo.uri) {
           setBackgroundImage(photo.uri);
-          await AsyncStorage.setItem('backgroundImage', photo.ur);
+          await AsyncStorage.setItem('backgroundImage', photo.uri);
         }
       } catch (error) {
-        console.error('Error al tomar la foto:', error);
+        console.error('Error taking picture:', error);
       }
     }
   };
@@ -66,39 +66,46 @@ const BackgroundImageChanger: React.FC = () => {
         await AsyncStorage.setItem('backgroundImage', uri);
       }
     } catch (error) {
-      console.error('Error al seleccionar la imagen:', error);
+      console.error('Error selecting image:', error);
     }
   };
 
+ 
+  const toggleCameraFacing = () => {
+    setFacing(current => (current === 'back' ? 'front' : 'back'));
+  };
   return (
     <View style={styles.container}>
       {showCamera ? (
-        <Camera
+        <CameraView
           style={styles.camera}
-          type={CameraType.back}
-          ref={cameraRef}
+          type={facing}
+          ref={CameraView}
         >
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={() => setShowCamera(false)}>
-              <Text style={styles.buttonText}>Cancelar</Text>
+              <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={handleCameraCapture}>
-              <Text style={styles.buttonText}>Tomar Foto</Text>
+              <Text style={styles.buttonText}>Take Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+              <Text style={styles.buttonText}>Flip Camera</Text>
             </TouchableOpacity>
           </View>
-        </Camera>
+        </CameraView>
       ) : (
         <>
           <Image
-            source={backgroundImage ? { uri: backgroundImage } : require('../../assets/default-background.jpg')}
+            source={backgroundImage ? { uri: backgroundImage } : {uri: "https://i.pinimg.com/564x/ee/e9/b1/eee9b1c75a2d43f5a0d32a212d1a565f.jpg"}}
             style={styles.backgroundImage}
           />
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={takePhoto}>
-              <Text style={styles.buttonText}>Tomar Foto</Text>
+              <Text style={styles.buttonText}>Take Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={selectImage}>
-              <Text style={styles.buttonText}>Seleccionar de Galería</Text>
+              <Text style={styles.buttonText}>Select from Gallery</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -110,6 +117,7 @@ const BackgroundImageChanger: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'center',
   },
   backgroundImage: {
     flex: 1,
@@ -134,6 +142,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontSize: 16,
+  },
+  message: {
+    textAlign: 'center',
+    paddingBottom: 10,
   },
 });
 
