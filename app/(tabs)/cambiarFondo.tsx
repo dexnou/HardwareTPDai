@@ -1,59 +1,72 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Image, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Camera } from 'expo-camera';
+import { View, Image, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { Camera, CameraType } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BackgroundImageChanger: React.FC = () => {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-  const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
-  const [showCamera, setShowCamera] = useState(false);
+  const [cameraPermission, setCameraPermission] = useState<boolean>(false);
+  const [showCamera, setShowCamera] = useState<boolean>(false);
   const cameraRef = useRef<Camera>(null);
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setCameraPermission(status === 'granted');
+    const initialize = async () => {
+      try {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        setCameraPermission(status === 'granted');
 
-      const savedImage = await AsyncStorage.getItem('backgroundImage');
-      if (savedImage) {
-        setBackgroundImage(savedImage);
+        const savedImage = await AsyncStorage.getItem('backgroundImage');
+        if (savedImage) {
+          setBackgroundImage(savedImage);
+        }
+      } catch (error) {
+        console.error('Error initializing permissions or fetching image:', error);
       }
-    })();
+    };
+
+    initialize();
   }, []);
 
   const takePhoto = async () => {
     if (cameraPermission) {
       setShowCamera(true);
     } else {
-      alert('No se ha otorgado permiso para usar la cámara');
+      Alert.alert('Permiso no concedido', 'No se ha otorgado permiso para usar la cámara.');
     }
   };
 
   const handleCameraCapture = async () => {
     if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync();
-      setShowCamera(false);
-      if (photo) {
-        const uri = photo.uri;
-        setBackgroundImage(uri);
-        await AsyncStorage.setItem('backgroundImage', uri);
+      try {
+        const photo = await cameraRef.current.takePictureAsync();
+        setShowCamera(false);
+        if (photo.uri) {
+          setBackgroundImage(photo.uri);
+          await AsyncStorage.setItem('backgroundImage', photo.ur);
+        }
+      } catch (error) {
+        console.error('Error al tomar la foto:', error);
       }
     }
   };
 
   const selectImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 1,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 1,
+      });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      setBackgroundImage(uri);
-      await AsyncStorage.setItem('backgroundImage', uri);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const uri = result.assets[0].uri;
+        setBackgroundImage(uri);
+        await AsyncStorage.setItem('backgroundImage', uri);
+      }
+    } catch (error) {
+      console.error('Error al seleccionar la imagen:', error);
     }
   };
 
@@ -62,7 +75,7 @@ const BackgroundImageChanger: React.FC = () => {
       {showCamera ? (
         <Camera
           style={styles.camera}
-          type={Camera.Constants.Type.back}
+          type={CameraType.back}
           ref={cameraRef}
         >
           <View style={styles.buttonContainer}>
@@ -77,7 +90,7 @@ const BackgroundImageChanger: React.FC = () => {
       ) : (
         <>
           <Image
-            source={backgroundImage ? { uri: backgroundImage } : require('./default-background.jpg')}
+            source={backgroundImage ? { uri: backgroundImage } : require('../../assets/default-background.jpg')}
             style={styles.backgroundImage}
           />
           <View style={styles.buttonContainer}>
