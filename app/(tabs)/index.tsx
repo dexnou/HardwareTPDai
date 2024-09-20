@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function HomeScreen() {
   const [{x,y,z}, setData] = useState({ x: 0, y: 0, z: 0 });
   const [lastUpdate, setLastUpdate] = useState(Date.now());
-  const THRESHOLD = 1.5; // Umbral para detectar sacudida
+  const THRESHOLD = 5; // Umbral para detectar sacudida
   const INTERVAL = 100; // Intervalo de actualización en ms
   let WHATSAPP_NUMBER: Promise<string | null>;
 
