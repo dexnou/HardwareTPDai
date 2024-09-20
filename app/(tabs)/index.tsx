@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function HomeScreen() {
-  const [data, setData] = useState({ x: 0, y: 0, z: 0 });
+  const [{x,y,z}, setData] = useState({ x: 0, y: 0, z: 0 });
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const THRESHOLD = 1.5; // Umbral para detectar sacudida
   const INTERVAL = 100; // Intervalo de actualización en ms
@@ -22,13 +22,12 @@ export default function HomeScreen() {
   
 
   useEffect(() => {
-    const subscription = Accelerometer.addListener(accelerometerData => {
+    const subscription = Accelerometer.addListener(setData => {
       const currentTime = Date.now();
       const deltaTime = currentTime - lastUpdate;
   
       if (deltaTime > INTERVAL) {
-        const { x, y, z } = accelerometerData;
-        setData(accelerometerData);
+        const { x, y, z } = setData;
   
         const magnitude = Math.sqrt(x * x + y * y + z * z);
   

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StyleSheet, View, TextInput, Text, Button, Alert } from 'react-native';
+import { StyleSheet, View, TextInput, Text, Button, Alert, SafeAreaView } from 'react-native';
 
 const NumeroEmergencia = () => {
     const [numEmergencia, setNumEmergencia] = useState('');
 
-    const handleInputChange = (text: string) => {
-        const formateado = adaptarNum(text);
-        return formateado;
+    const handleInputChange = async (text: string) => {
+        const formateado =await adaptarNum(text);
+        setNumEmergencia(formateado);
     }
 
     const adaptarNum = (text: string) => {
@@ -33,17 +33,24 @@ const NumeroEmergencia = () => {
     }
 
     return (
-        <View>
+        <SafeAreaView style={style.general}>
             <Text>Número Telefónico de Emergencia</Text>
             <TextInput 
                 keyboardType='numeric'
                 placeholder='Escriba su número de teléfono'
                 value={numEmergencia}
+                maxLength={12}
                 onChangeText={handleInputChange}
             />
             <Button title="Actualizar" onPress={modificarGuardado}/>
-        </View>
+        </SafeAreaView>
     )
 }
+
+const style = StyleSheet.create({
+    general: {
+        padding: '5%',
+    }
+});
 
 export default NumeroEmergencia;

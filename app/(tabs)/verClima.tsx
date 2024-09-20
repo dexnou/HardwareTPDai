@@ -3,10 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location';
 
-const verClima = () => {
-    const [fecha, setFecha] = useEffect(new Date())
-    const [ubicacion, setUbicacion] = useEffect(null)
-    const [temperatura, setTemperatura] = useEffect(null)
+const VerClima = () => {
+    const [fecha, setFecha] = useState(new Date());
+    const [ubicacion, setUbicacion] = useState(null);
+    const [temperatura, setTemperatura] = useState(null);
 
     useEffect(() => {
         const timer = setInterval(() => setFecha(new Date()), 1000);
@@ -41,4 +41,4 @@ const verClima = () => {
     )
 }
 
-export default verClima;
+export default VerClima;

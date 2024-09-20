@@ -4,8 +4,8 @@ import QRCode from 'react-native-qrcode-svg';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 const escanearQR = () => {
-    const [modal, setModal] = useState(false)
-    const [escanear,setEscanear] = useState(false)
+    const [modal, setModal] = useState(false);
+    const [escanear, setEscanear] = useState(false);
     const [dataEscaneada, setDataEscaneada] = useState('');
     const [tienePermiso, setTienePermiso] = useState(null);
   
@@ -22,15 +22,35 @@ const escanearQR = () => {
     const handleBarCodeScanned = ({ data }) => {
         setEscanear(false);
         try {
-          const parsedData = JSON.parse(data);
-          if (parsedData.team) {
-            setDataEscaneada(parsedData.team.join(', '));
-            setModal(true);
-          } else {
-            alert('QR inválido. No contiene información del equipo.');
+          let parsedData;
+          try {
+            parsedData = JSON.parse(data);
+          } catch {
+            // Si no es JSON, tratamos data como texto plano
+            parsedData = data;
           }
+
+          if (typeof parsedData === 'object' && parsedData !== null) {
+            // Es un objeto (probablemente JSON)
+            if (Array.isArray(parsedData.team)) {
+              // Formato esperado: { team: [...] }
+              setDataEscaneada(parsedData.team.join(', '));
+            } else {
+              // Otro tipo de objeto JSON
+              setDataEscaneada(JSON.stringify(parsedData, null, 2));
+            }
+          } else if (typeof parsedData === 'string') {
+            // Es una cadena de texto
+            setDataEscaneada(parsedData);
+          } else {
+            // Otro tipo de dato
+            setDataEscaneada(String(parsedData));
+          }
+          
+          setModal(true);
         } catch (error) {
-          alert('Error al leer el QR. Formato inválido.');
+          console.error('Error al procesar los datos del QR:', error);
+          alert(`Error al procesar el QR. Contenido: ${data}`);
         }
     };
     
@@ -38,17 +58,10 @@ const escanearQR = () => {
         if (tienePermiso) {
             setEscanear(true);
         } else {
-          alert('No se ha otorgado permiso para usar la cámara.');
+          alert('No se ha otorgado permiso para usar la cámara. Por favor, concede los permisos en la configuración de tu dispositivo.');
         }
     };
 
-    if (tienePermiso === null) {
-        return <Text>Solicitando permiso de cámara</Text>;
-    }
-    if (tienePermiso === false) {
-        return <Text>Sin acceso a la cámara</Text>;
-    }
-    
     return(
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Escanear QR</Text>
@@ -59,7 +72,17 @@ const escanearQR = () => {
             <Text style={styles.teamMembers}>
             Integrantes: {equipo.join(', ')}
             </Text>
-            <Button title="Escanear QR de otra app" onPress={empezarEscanear} />
+            <Button 
+                title="Escanear QR de otra app" 
+                onPress={empezarEscanear} 
+                disabled={tienePermiso === false}
+            />
+            {tienePermiso === false && (
+                <Text style={styles.warningText}>
+                    No se ha otorgado permiso para usar la cámara. 
+                    La función de escaneo no está disponible.
+                </Text>
+            )}
     
             <Modal
             animationType="slide"
@@ -68,7 +91,7 @@ const escanearQR = () => {
             onRequestClose={() => setModal(false)}
             >
             <View style={styles.modalView}>
-                <Text style={styles.modalText}>Integrantes de la app escaneada:</Text>
+                <Text style={styles.modalText}>Contenido del QR escaneado:</Text>
                 <Text>{dataEscaneada}</Text>
                 <Button title="Cerrar" onPress={() => setModal(false)} />
             </View>
@@ -105,10 +128,10 @@ const styles = StyleSheet.create({
       textAlign: 'center',
     },
     modalView: {
-      margin: 20,
+      marginTop: 50,
       backgroundColor: 'white',
       borderRadius: 20,
-      padding: 35,
+      padding: 40,
       alignItems: 'center',
       shadowColor: '#000',
       shadowOffset: {
@@ -129,7 +152,11 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       paddingBottom: 20,
     },
+    warningText: {
+      color: 'red',
+      textAlign: 'center',
+      marginTop: 10,
+    },
 });
   
-
 export default escanearQR;
