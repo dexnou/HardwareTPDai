@@ -37,7 +37,7 @@ const NumeroEmergencia = () => {
             <Text>Número Telefónico de Emergencia</Text>
             <TextInput 
                 keyboardType='numeric'
-                placeholder='??-????-????'
+                placeholder='Escriba su número de teléfono'
                 value={numEmergencia}
                 onChangeText={handleInputChange}
             />

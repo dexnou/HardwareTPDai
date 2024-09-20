@@ -45,7 +45,7 @@ export default function HomeScreen() {
     return () => {
       subscription.remove();
     };
-  }, [lastUpdate]);  
+  }, []);  
 
   const handleShake = () => {
     sendMessage();
