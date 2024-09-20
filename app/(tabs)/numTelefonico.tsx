@@ -20,16 +20,16 @@ const NumeroEmergencia = () => {
     }
 
     const modificarGuardado = async () => {
+        setNumEmergencia(numEmergencia)
+        const alertMessage = 'El número telefónico de emergencia fue actualizado. Ahora es: ' + numEmergencia;
         await AsyncStorage.setItem('num', numEmergencia);
-        Alert.alert('Actualización',
-        'El número telefónico de emergencia fue actualizaco',
+        Alert.alert('Actualización', alertMessage, [
         {
-          cancelable: true,
-          onDismiss: () =>
-            Alert.alert(
-              'This alert was dismissed by tapping outside of the alert dialog.',
-            ),
-        },)
+            text: "OK",
+            onPress: () => {},
+            style: 'destructive',
+        },
+    ])
     }
 
     return (

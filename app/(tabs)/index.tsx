@@ -14,7 +14,12 @@ export default function HomeScreen() {
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const THRESHOLD = 1.5; // Umbral para detectar sacudida
   const INTERVAL = 100; // Intervalo de actualización en ms
-  const WHATSAPP_NUMBER = AsyncStorage.getItem('num');
+  let WHATSAPP_NUMBER: Promise<string | null>;
+
+  useEffect(() => {
+    WHATSAPP_NUMBER = AsyncStorage.getItem('num');
+  }, [])
+  
 
   useEffect(() => {
     const subscription = Accelerometer.addListener(accelerometerData => {
